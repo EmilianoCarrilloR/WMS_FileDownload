@@ -1,0 +1,57 @@
+import os
+import requests
+import datetime
+
+def download_csv(url, save_folder, file_name):
+    response = requests.get(url)
+    if response.status_code == 200:
+        filename = os.path.join(save_folder, f"{file_name}.csv")
+        with open(filename, "wb") as file:
+            file.write(response.content)
+        print(f"Downloaded: {filename}")
+        return filename
+    else:
+        print(f"Failed to download: {url}")
+        return None
+
+def correct_multiline_cells(file_path):
+    # Read the CSV file into memory with utf-8 encoding
+    with open(file_path, 'r', encoding='utf-8') as file:
+        csv_content = file.read()
+
+    # Replace newline characters within double-quoted cells with a space
+    corrected_content = ''
+    in_double_quotes = False
+    for char in csv_content:
+        if char == '"':
+            in_double_quotes = not in_double_quotes
+        if char == '\n' and in_double_quotes:
+            corrected_content += ' '
+        else:
+            corrected_content += char
+
+    # Write the corrected content back to the file with utf-8 encoding
+    with open(file_path, 'w', encoding='utf-8') as file:
+        file.write(corrected_content)
+
+# Define URLs and corresponding filenames
+url_filename_mapping = {
+    "https://abc.xentral.biz/index.php?module=report&action=export&id=": "C4_Sendungen",
+    "https://abc.xentral.biz/index.php?module=report&action=export&id=": "C3_Sendungen",
+    "https://abc.xentral.biz/index.php?module=report&action=export&id=": "C2_Sendungen",
+    "https://abc.xentral.biz/index.php?module=report&action=export&id=": "C1_Sendungen",
+    "https://abc.xentral.biz/index.php?module=report&action=export&id=": "C4_Aufträge",
+    "https://abc.xentral.biz/index.php?module=report&action=export&id=": "C3_Aufträge",
+    "https://abc.xentral.biz/index.php?module=report&action=export&id=": "C2_Aufträge",
+    "https://abc.xentral.biz/index.php?module=report&action=export&id=": "C1_Aufträge"
+    # Add more URLs and filenames as needed
+}
+
+save_folder = r""
+
+for url, filename in url_filename_mapping.items():
+    csv_file = download_csv(url, save_folder, filename)
+    if csv_file:
+        # Correct multi-line cells in the CSV file
+        correct_multiline_cells(csv_file)
+        print(f"Corrected CSV: {csv_file}")
